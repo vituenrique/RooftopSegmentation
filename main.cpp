@@ -5,7 +5,6 @@
 #include <string>
 #include <iostream>
 #include <experimental/filesystem>
-#include "GraphSegmentation/lib/graph_segmentation.h"
 
 using namespace std;
 using namespace cv;
@@ -21,74 +20,12 @@ vector<string> getAllImagesInDirectory(string path) {
 	return imagesPath;
 }
 
-/** \brief Check if the given pixel is a boundary pixel in the given
-* segmentation.
-* \param[in] labels segments as integer image
-* \param[in] i y coordinate
-* \param[in] j x coordinate
-* \return true if boundary pixel, false otherwise
-*/
-bool is4ConnectedBoundaryPixel(const Mat &labels, int i, int j) {
-
-	if (i > 0) {
-		if (labels.at<int>(i, j) != labels.at<int>(i - 1, j)) {
-			return true;
-		}
-	}
-
-	if (i < labels.rows - 1) {
-		if (labels.at<int>(i, j) != labels.at<int>(i + 1, j)) {
-			return true;
-		}
-	}
-
-	if (j > 0) {
-		if (labels.at<int>(i, j) != labels.at<int>(i, j - 1)) {
-			return true;
-		}
-	}
-
-	if (j < labels.cols - 1) {
-		if (labels.at<int>(i, j) != labels.at<int>(i, j + 1)) {
-			return true;
-		}
-	}
-
-	return false;
-}
-
-/** \brief Draw the segments as contours in the image.
-* \param[in] image image to draw contours in (color image expected)
-* \param[in] labels segments to draw as integer image
-* \param[out] contours image with segments indicated by contours
-*/
-void drawContours(const Mat &image, const Mat &labels, Mat &contours) {
-
-	assert(!image.empty());
-	assert(image.channels() == 3);
-	assert(image.rows == labels.rows && image.cols == labels.cols);
-	assert(labels.type() == CV_32SC1);
-
-	contours.create(image.rows, image.cols, CV_8UC3);
-	Vec3b color(0, 0, 0); // Black contours
-
-	for (int i = 0; i < contours.rows; ++i) {
-		for (int j = 0; j < contours.cols; ++j) {
-			if (is4ConnectedBoundaryPixel(labels, i, j)) {
-
-				contours.at<Vec3b>(i, j) = color;
-			} else {
-				contours.at<Vec3b>(i, j) = image.at<Vec3b>(i, j);
-			}
-		}
-	}
-}
-
 void applyHoughTranform(Mat image, string filename, string output_dir) {
 
 	Mat src_gauss, finalImage = image.clone();
 
 	GaussianBlur(image, src_gauss, Size(3, 3), 0, 0, BORDER_DEFAULT);
+	addWeighted(src_gauss, 1.5, image, -0.5, 0, src_gauss);
 
 	Mat dst, cdst;
 	Canny(src_gauss, dst, 50, 200, 3);
@@ -105,49 +42,32 @@ void applyHoughTranform(Mat image, string filename, string output_dir) {
 	imwrite(linepath.string(), finalImage);
 }
 
-void applyGraphSegmentation(Mat image, string filename, string output_dir, float threshold, int minimum_segment_size) {
-
-	Mat src_gauss, finalImage = image.clone();
-	GaussianBlur(image, src_gauss, Size(3, 3), 0, 0, BORDER_DEFAULT);
-
-	GraphSegmentationMagicThreshold magic(threshold);
-	GraphSegmentationEuclideanRGB distance;
-
-	GraphSegmentation segmenter;
-	segmenter.setMagic(&magic);
-	segmenter.setDistance(&distance);
-
-	segmenter.buildGraph(src_gauss);
-	segmenter.oversegmentGraph();
-	segmenter.enforceMinimumSegmentSize(minimum_segment_size);
-
-	Mat labels = segmenter.deriveLabels();
-
-	path contours_file(output_dir / path(path(filename).stem().string() + ".png"));
-
-	drawContours(src_gauss, labels, finalImage);
-	imwrite(contours_file.string(), finalImage);
-
-}
-
 int main() {
 
 	string africanos_path = "dataset_satelite/africanos/";
 	string nhozinho_path = "dataset_satelite/nhozinho/";
 	vector<string> imagesPaths = getAllImagesInDirectory(africanos_path);
+
+	string sigma = "0.5";
+	string k = "300";
+	string min_size = "2000";
+	string output_path = " ./PythonModules/Hipoteses_" + min_size + "/ ";
+
 	for (int i = 0; i < imagesPaths.size(); i++) {
 		string imagePath = imagesPaths.at(i);
 
 		Mat src = imread(imagePath);
 
 		if (!src.data) return -1; 
+		string magic_call = "C:/Users/victo/Anaconda3/envs/OpenCV/python ./PythonModules/segmentator.py " + imagePath + output_path + sigma + " " + k + " " + min_size;
 
-		applyHoughTranform(src, imagePath, "output_lines_2/");
+		system(magic_call.c_str());
 
-		//applyGraphSegmentation(src, imagePath, "output_150_210/", 150, 210);
+		//applyHoughTranform(src, imagePath, "output_lines_3_enhanced/");
+
 	}
 
-
+	system("pause");
 
 	return 0;
 }

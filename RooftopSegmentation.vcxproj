@@ -123,6 +123,9 @@
     <ClInclude Include="GraphSegmentation\lib\graph_segmentation.h" />
     <ClInclude Include="GraphSegmentation\lib\image_graph.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="PythonModules\segmentator.py" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
