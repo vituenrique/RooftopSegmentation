@@ -5,11 +5,11 @@
 #include <string>
 #include <iostream>
 #include <experimental/filesystem>
+#include "GraphSegmentation/lib/graph_segmentation.h"
 
 using namespace std;
 using namespace cv;
 using namespace experimental::filesystem;
-
 
 vector<string> getAllImagesInDirectory(string path) {
 	vector<string> imagesPath;
@@ -48,22 +48,22 @@ int main() {
 	string nhozinho_path = "dataset_satelite/nhozinho/";
 	vector<string> imagesPaths = getAllImagesInDirectory(africanos_path);
 
-	string sigma = "0.5";
-	string k = "300";
-	string min_size = "2000";
-	string output_path = " ./PythonModules/Hipoteses_" + min_size + "/ ";
-
+	float sigma = 0.5;
+	int k = 300;
+	int min_size = 2000;
+	
 	for (int i = 0; i < imagesPaths.size(); i++) {
 		string imagePath = imagesPaths.at(i);
 
 		Mat src = imread(imagePath);
 
 		if (!src.data) return -1; 
-		string magic_call = "C:/Users/victo/Anaconda3/envs/OpenCV/python ./PythonModules/segmentator.py " + imagePath + output_path + sigma + " " + k + " " + min_size;
-
-		system(magic_call.c_str());
-
+		
 		//applyHoughTranform(src, imagePath, "output_lines_3_enhanced/");
+
+		GraphSegmentation segmenter;
+		segmenter.executeGraphSegmentation(imagePath, sigma, k, min_size);
+		
 
 	}
 

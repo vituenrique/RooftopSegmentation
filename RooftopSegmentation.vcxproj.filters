@@ -23,14 +23,8 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GraphSegmentation\lib\graph_segmentation.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GraphSegmentation\lib\image_graph.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="PythonModules\segmentator.py" />
   </ItemGroup>
 </Project>
