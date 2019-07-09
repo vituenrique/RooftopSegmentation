@@ -1,6 +1,10 @@
 #include "graph_segmentation.h"
 #include <limits>
 #include <string>
+#include <fstream>
+#include <iostream>
+#include <algorithm>
+#include <vector>
 
 void GraphSegmentation::buildGraph(const cv::Mat &image) {
     
@@ -85,14 +89,61 @@ void GraphSegmentation::oversegmentGraph() {
     }
 }
 
-void GraphSegmentation::executeGraphSegmentation(std::string imagePath, float sigma, int k, int min_size) {
+std::vector<std::vector<int>>  GraphSegmentation::executeGraphSegmentation(std::string imagePath, float sigma, int k, int min_size) {
 	std::string sigmaS = std::to_string(sigma);
 	std::string kS = std::to_string(k);
 	std::string min_sizeS = std::to_string(min_size);
-	std::string output_path = extraModulesPath + "Hipoteses_" + min_sizeS + "/ ";
-	std::string magic_call = executer + " " + source + " " + imagePath + " " + output_path + sigmaS + " " + kS + " " + min_sizeS;
+	std::string output_path = extraModulesPath + "Hipoteses_" + min_sizeS + "/";
+	std::string magic_call = executer + " " + source + " " + imagePath + " " + output_path + " " + sigmaS + " " + kS + " " + min_sizeS;
 
 	system(magic_call.c_str());
+
+	std::string imageName = imagePath.substr(imagePath.find_last_of("/\\") + 1);
+
+	for (int i = 0; i < 4; i++) imageName.pop_back();
+
+	int number = std::atoi(imageName.c_str());
+	imageName = std::to_string(number);
+	if(getHypothesisComputed(imageName, output_path))
+		return hypothesis;
+}
+
+bool GraphSegmentation::getHypothesisComputed(std::string imageName, std::string segmentsPath) {
+	std::ifstream file;
+	std::string segments_path = segmentsPath + "hipoteses/" + imageName + ".csv";
+	std::cout << segments_path << std::endl;
+	file.open(segments_path);
+
+	std::vector<int> top;
+	std::vector<int> bottom;
+	std::vector<int> left;
+	std::vector<int> right;
+
+	while (file.good()) {
+		std::string line;
+		std::getline(file, line, ',');
+		top.push_back(std::atoi(line.c_str()));
+
+		std::getline(file, line, ',');
+		bottom.push_back(std::atoi(line.c_str()));
+
+		std::getline(file, line, ',');
+		left.push_back(std::atoi(line.c_str()));
+
+		std::getline(file, line, '\n');
+		right.push_back(std::atoi(line.c_str()));
+	}
+
+	top.pop_back();
+	bottom.pop_back();
+	left.pop_back();
+	right.pop_back();
+	hypothesis.push_back(top);
+	hypothesis.push_back(bottom);
+	hypothesis.push_back(left);
+	hypothesis.push_back(right);
+
+	return true;
 }
 
 void GraphSegmentation::enforceMinimumSegmentSize(int M) {

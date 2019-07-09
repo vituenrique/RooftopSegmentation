@@ -1,2 +1,12 @@
-﻿  RooftopSegmentation.vcxproj -> C:\Users\victo\documents\visual studio 2015\Projects\RooftopSegmentation\x64\Debug\RooftopSegmentation.exe
+﻿  main.cpp
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\image_graph.h(185): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\image_graph.h(192): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(31): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(32): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(33): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(49): warning C4244: '=': conversion from 'double' to 'float', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(54): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(55): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+c:\users\victo\documents\visual studio 2015\projects\rooftopsegmentation\graphsegmentation\lib\graph_segmentation.h(56): warning C4244: 'initializing': conversion from 'int' to 'float', possible loss of data
+  RooftopSegmentation.vcxproj -> C:\Users\victo\documents\visual studio 2015\Projects\RooftopSegmentation\x64\Debug\RooftopSegmentation.exe
   RooftopSegmentation.vcxproj -> C:\Users\victo\documents\visual studio 2015\Projects\RooftopSegmentation\x64\Debug\RooftopSegmentation.pdb (Partial PDB)

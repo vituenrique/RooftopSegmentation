@@ -120,7 +120,9 @@ public:
     
     void buildGraph(const cv::Mat &image);
 
-	void executeGraphSegmentation(std::string imagePath, float sigma, int k, int min_size);
+	std::vector<std::vector<int>> executeGraphSegmentation(std::string imagePath, float sigma, int k, int min_size);
+
+	bool getHypothesisComputed(std::string imageName, std::string segmentsPath);
     
     void oversegmentGraph();
     
@@ -128,6 +130,7 @@ public:
     
     cv::Mat deriveLabels();
 
+	std::vector<std::vector<int>> hypothesis;
 	std::string executer = "C:/Users/victo/Anaconda3/envs/OpenCV/python";
 	std::string extraModulesPath = "./GraphSegmentation/lib/ExtraModule/";
 	std::string source = extraModulesPath + "segmentator.py";

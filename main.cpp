@@ -62,8 +62,9 @@ int main() {
 		//applyHoughTranform(src, imagePath, "output_lines_3_enhanced/");
 
 		GraphSegmentation segmenter;
-		segmenter.executeGraphSegmentation(imagePath, sigma, k, min_size);
-		
+		vector<vector<int>> hypothesis = segmenter.executeGraphSegmentation(imagePath, sigma, k, min_size);
+		//TODO: Calcular as áreas de cada hipotese para cada imagem e normalizar 
+		break;
 
 	}
 

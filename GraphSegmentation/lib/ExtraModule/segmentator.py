@@ -7,8 +7,7 @@ import pandas as pd
 
 def saveHypothesisAsCSV(hypothesis, imgName):
 	df = pd.DataFrame(hypothesis)
-	df.to_csv(output_path + imgName + "_hypothesis.csv", sep=",", index=False)
-
+	df.to_csv(output_path + "hipoteses/" + imgName + ".csv", sep=",", header=False, index=False)
 
 input_img = argv[1]
 output_path = argv[2]
@@ -49,11 +48,9 @@ for i in range(np.max(segment)):
 if not os.path.isdir(output_path):
 	os.mkdir(output_path)
 
+if not os.path.isdir(output_path + "hipoteses/"):
+	os.mkdir(output_path + "hipoteses/")
+
 cv2.imwrite(output_path + image_name + "_regions.png", regions_image) 
 cv2.imwrite(output_path + image_name + "_hypothesis.png", src)
 saveHypothesisAsCSV(hypothesis, image_name)
-
-
-
-
-
