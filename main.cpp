@@ -42,6 +42,27 @@ void applyHoughTranform(Mat image, string filename, string output_dir) {
 	imwrite(linepath.string(), finalImage);
 }
 
+int computeArea(int w, int h) {
+	return w * h;
+}
+
+vector<int> computeAllHypothesisCovagere(vector<vector<int>> hypothesis) {
+	vector<int> coverageHypothesis;
+
+	for (int i = 0; i < hypothesis[0].size(); i++) {
+		int height_hypothesis = abs(hypothesis[0][i] - hypothesis[1][i]);
+		int width_hypothesis = abs(hypothesis[2][i] - hypothesis[3][i]);
+
+		int coverage = computeArea(width_hypothesis, height_hypothesis);
+		coverageHypothesis.push_back(coverage);
+	}
+	
+	return coverageHypothesis;
+}
+
+//TODO: Veja o que da pra fazer aqui. Voce já tem a área de cada hipotese e a área de seus respectivos segmentos. Talvez seja o caso pensar melhor no calculo das probabilidades.
+void localHypothesisRefinement(){}
+
 int main() {
 
 	string africanos_path = "dataset_satelite/africanos/";
@@ -56,14 +77,22 @@ int main() {
 		string imagePath = imagesPaths.at(i);
 
 		Mat src = imread(imagePath);
-
+		 
 		if (!src.data) return -1; 
 		
 		//applyHoughTranform(src, imagePath, "output_lines_3_enhanced/");
 
 		GraphSegmentation segmenter;
 		vector<vector<int>> hypothesis = segmenter.executeGraphSegmentation(imagePath, sigma, k, min_size);
-		//TODO: Calcular as áreas de cada hipotese para cada imagem e normalizar 
+		cout << hypothesis[4][0] << endl;
+
+		vector<int> coverageHypothesis = computeAllHypothesisCovagere(hypothesis);
+		
+		//for (int j = 0; j < coverageHypothesis.size(); j++) {
+		//	cout << coverageHypothesis[j] << endl;
+		//}
+
+
 		break;
 
 	}

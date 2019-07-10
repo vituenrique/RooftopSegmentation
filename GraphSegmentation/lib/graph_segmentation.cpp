@@ -111,13 +111,13 @@ std::vector<std::vector<int>>  GraphSegmentation::executeGraphSegmentation(std::
 bool GraphSegmentation::getHypothesisComputed(std::string imageName, std::string segmentsPath) {
 	std::ifstream file;
 	std::string segments_path = segmentsPath + "hipoteses/" + imageName + ".csv";
-	std::cout << segments_path << std::endl;
 	file.open(segments_path);
 
 	std::vector<int> top;
 	std::vector<int> bottom;
 	std::vector<int> left;
 	std::vector<int> right;
+	std::vector<int> area_segment;
 
 	while (file.good()) {
 		std::string line;
@@ -130,18 +130,24 @@ bool GraphSegmentation::getHypothesisComputed(std::string imageName, std::string
 		std::getline(file, line, ',');
 		left.push_back(std::atoi(line.c_str()));
 
-		std::getline(file, line, '\n');
+		std::getline(file, line, ',');
 		right.push_back(std::atoi(line.c_str()));
+
+		std::getline(file, line, '\n');
+		area_segment.push_back(std::atoi(line.c_str()));
 	}
 
 	top.pop_back();
 	bottom.pop_back();
 	left.pop_back();
 	right.pop_back();
+
+	area_segment.pop_back();
 	hypothesis.push_back(top);
 	hypothesis.push_back(bottom);
 	hypothesis.push_back(left);
 	hypothesis.push_back(right);
+	hypothesis.push_back(area_segment);
 
 	return true;
 }

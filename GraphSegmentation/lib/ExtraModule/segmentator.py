@@ -28,6 +28,7 @@ hypothesis['top'] = []
 hypothesis['bottom'] = []
 hypothesis['left'] = []
 hypothesis['right'] = []
+hypothesis['area'] = []
 
 for i in range(np.max(segment)):
 	y, x = np.where(segment == i)
@@ -41,9 +42,17 @@ for i in range(np.max(segment)):
 	cv2.rectangle(src, (left, bottom), (right, top), (0, 255, 0), 1)
 	
 	color = [random.randint(0, 255), random.randint(0, 255),random.randint(0, 255)]
-
+	
+	each_segment = np.zeros((src.shape[0], src.shape[1], 1), np.uint8)
 	for xi, yi in zip(x, y):
 		regions_image[yi, xi] = color
+		each_segment[yi, xi] = 255
+		
+	_, contours, _ = cv2.findContours(each_segment.copy(), cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+	cnt = contours[0]
+	M = cv2.moments(cnt)
+	area = M['m00']
+	hypothesis['area'].append(int(area))
 
 if not os.path.isdir(output_path):
 	os.mkdir(output_path)
