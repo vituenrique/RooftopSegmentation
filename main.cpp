@@ -4,7 +4,10 @@
 #include <vector>
 #include <string>
 #include <iostream>
+#include <algorithm>
 #include <experimental/filesystem>
+#include <climits>
+#include <list>
 #include "GraphSegmentation/lib/graph_segmentation.h"
 
 using namespace std;
@@ -42,6 +45,23 @@ void applyHoughTranform(Mat image, string filename, string output_dir) {
 	imwrite(linepath.string(), finalImage);
 }
 
+vector<double> normalizeData(vector<int> data) {
+	int max = INT_MIN;
+	int min = INT_MAX;
+	for (int i = 0; i < data.size(); i++) {
+		if (data[i] >= max) max = data[i];
+		if (data[i] < min) min = data[i];
+	}
+
+	vector<double> normalizedVector;
+	for (int i = 0; i < data.size(); i++) {
+		double normalized_value = (double)(data[i] - min) / (max - min);
+		normalizedVector.push_back(normalized_value);
+	}
+
+	return normalizedVector;
+}
+
 int computeArea(int w, int h) {
 	return w * h;
 }
@@ -61,7 +81,11 @@ vector<int> computeAllHypothesisCovagere(vector<vector<int>> hypothesis) {
 }
 
 //TODO: Veja o que da pra fazer aqui. Voce já tem a área de cada hipotese e a área de seus respectivos segmentos. Talvez seja o caso pensar melhor no calculo das probabilidades.
-void localHypothesisRefinement(){}
+vector<int> localHypothesisRefinement(vector<double> area_hypothesis_normalized, vector<double> area_segments_normalized){
+	for (int j = 0; j < area_segments_normalized.size(); j++) {
+		cout << "Area da Hipotese: " << area_hypothesis_normalized[j] << " | " << " Area do Segmento: " << area_segments_normalized[j] << endl;
+	}
+}
 
 int main() {
 
@@ -84,14 +108,11 @@ int main() {
 
 		GraphSegmentation segmenter;
 		vector<vector<int>> hypothesis = segmenter.executeGraphSegmentation(imagePath, sigma, k, min_size);
-		cout << hypothesis[4][0] << endl;
 
-		vector<int> coverageHypothesis = computeAllHypothesisCovagere(hypothesis);
-		
-		//for (int j = 0; j < coverageHypothesis.size(); j++) {
-		//	cout << coverageHypothesis[j] << endl;
-		//}
+		vector<int> area_hypothesis = computeAllHypothesisCovagere(hypothesis);
 
+		vector<double> area_hypothesis_normalized = normalizeData(area_hypothesis);
+		vector<double> area_segments_normalized = normalizeData(hypothesis[4]);
 
 		break;
 
