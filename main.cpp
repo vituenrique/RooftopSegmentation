@@ -62,6 +62,23 @@ vector<double> normalizeData(vector<int> data) {
 	return normalizedVector;
 }
 
+vector<double> normalizeData(vector<double> data) {
+	double max = INT_MIN;
+	double min = INT_MAX;
+	for (int i = 0; i < data.size(); i++) {
+		if (data[i] >= max) max = data[i];
+		if (data[i] < min) min = data[i];
+	}
+
+	vector<double> normalizedVector;
+	for (int i = 0; i < data.size(); i++) {
+		double normalized_value = (double)(data[i] - min) / (max - min);
+		normalizedVector.push_back(normalized_value);
+	}
+
+	return normalizedVector;
+}
+
 int computeArea(int w, int h) {
 	return w * h;
 }
@@ -80,11 +97,40 @@ vector<int> computeAllHypothesisCovagere(vector<vector<int>> hypothesis) {
 	return coverageHypothesis;
 }
 
-//TODO: Veja o que da pra fazer aqui. Voce já tem a área de cada hipotese e a área de seus respectivos segmentos. Talvez seja o caso pensar melhor no calculo das probabilidades.
-vector<int> localHypothesisRefinement(vector<double> area_hypothesis_normalized, vector<double> area_segments_normalized){
-	for (int j = 0; j < area_segments_normalized.size(); j++) {
-		cout << "Area da Hipotese: " << area_hypothesis_normalized[j] << " | " << " Area do Segmento: " << area_segments_normalized[j] << endl;
+//TODO: - Descobrir como calcular a porcentagem de overlap entre o segmento e a hipotese
+//      - Adicionar a porcentagem de overlap no calculo da média
+vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> area_segments, double threshold = 0.1){
+	vector<double> ratios;
+	
+	for (int i = 0; i < area_segments.size(); i++) {
+		double ratio = (double)area_hypothesis[i] / area_segments[i];
+		cout << area_hypothesis[i] << " / " << area_segments[i] << "= " << ratio << endl;
+		ratios.push_back(ratio);
+		
+	} 
+	cout << endl;
+	cout << endl;
+	vector<double> ratios_normalized = normalizeData(ratios);
+	vector<double> area_hypothesis_normalized = normalizeData(area_hypothesis);
+	vector<double> scores;
+	for (int j = 0; j < ratios_normalized.size(); j++) {
+		double score = (area_hypothesis_normalized[j] + ratios_normalized[j]) / 2;
+		scores.push_back(score);
+		cout << "(" << area_hypothesis_normalized[j] << " + " << ratios_normalized[j] << ")/ 2 = " << score << endl;
 	}
+
+	cout << endl;
+	cout << endl;
+	vector<int> refined_indexes;
+	for (int i = 0; i < scores.size(); i++) {
+		if (scores[i] > threshold) {
+			refined_indexes.push_back(i);
+			cout << i << endl;
+		}
+	}
+
+	return refined_indexes;
+
 }
 
 int main() {
@@ -111,8 +157,8 @@ int main() {
 
 		vector<int> area_hypothesis = computeAllHypothesisCovagere(hypothesis);
 
-		vector<double> area_hypothesis_normalized = normalizeData(area_hypothesis);
-		vector<double> area_segments_normalized = normalizeData(hypothesis[4]);
+		// Refinamento das hipoteses geradas
+		vector<int> hypothesis_refined = localHypothesisRefinement(area_hypothesis, hypothesis[4]);
 
 		break;
 
