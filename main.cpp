@@ -97,14 +97,13 @@ vector<int> computeAllHypothesisCovagere(vector<vector<int>> hypothesis) {
 	return coverageHypothesis;
 }
 
-//TODO: - Descobrir como calcular a porcentagem de overlap entre o segmento e a hipotese
-//      - Adicionar a porcentagem de overlap no calculo da média
-vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> area_segments, double threshold = 0.1){
+// Compute Local Refiniment of all hypothesis created across all 8 values of k for the Graph Segmentation function
+vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> area_segments, double threshold1 = 0.5, double threshold2 = 0.5){
 	vector<double> ratios;
 	
 	for (int i = 0; i < area_segments.size(); i++) {
-		double ratio = (double)area_hypothesis[i] / area_segments[i];
-		cout << area_hypothesis[i] << " / " << area_segments[i] << "= " << ratio << endl;
+		double ratio = (double)area_segments[i] / area_hypothesis[i];
+		//cout << area_hypothesis[i] << " / " << area_segments[i] << "= " << ratio << endl;
 		ratios.push_back(ratio);
 		
 	} 
@@ -112,24 +111,39 @@ vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> a
 	cout << endl;
 	vector<double> ratios_normalized = normalizeData(ratios);
 	vector<double> area_hypothesis_normalized = normalizeData(area_hypothesis);
+	vector<double> area_segments_normalized = normalizeData(area_segments);
 	vector<double> scores;
 	for (int j = 0; j < ratios_normalized.size(); j++) {
-		double score = (area_hypothesis_normalized[j] + ratios_normalized[j]) / 2;
+		double score = (area_hypothesis_normalized[j] + ratios_normalized[j] + area_segments_normalized[j]) / 2;
 		scores.push_back(score);
-		cout << "(" << area_hypothesis_normalized[j] << " + " << ratios_normalized[j] << ")/ 2 = " << score << endl;
+		cout << "Index (" << j << ") -->" << "(" << area_hypothesis_normalized[j] << " + " << ratios_normalized[j] << " + " << area_segments_normalized[j] << ")/ 2 = " << score << endl;
 	}
 
 	cout << endl;
 	cout << endl;
 	vector<int> refined_indexes;
 	for (int i = 0; i < scores.size(); i++) {
-		if (scores[i] > threshold) {
+		//&& (area_hypothesis_normalized[i] > threshold && area_segments_normalized[i] > threshold) && ratios_normalized[i] > threshold   && scores[i] < threshold2
+		
+		if (scores[i] > threshold1 && ratios_normalized[i] > threshold2 && area_hypothesis_normalized[i] > 0.03 && area_hypothesis_normalized[i] < 0.1 ) {
+			cout << "Index (" << i << ") -->" << "(" << scores[i] << " , " << ratios_normalized[i] << ")" << (ratios_normalized[i] > threshold2) << endl;
 			refined_indexes.push_back(i);
 			cout << i << endl;
 		}
 	}
 
 	return refined_indexes;
+
+}
+
+void drawingHypothesis(Mat img, int top, int bottom, int left, int right) {
+	Point pt1(left, bottom);
+	Point pt2(right, top);
+	rectangle(img, pt1, pt2, cv::Scalar(0, 255, 0));
+	namedWindow("Hipoteses", WINDOW_AUTOSIZE);
+	imshow("Hipoteses", img);
+
+	waitKey(0);
 
 }
 
@@ -140,14 +154,13 @@ int main() {
 	vector<string> imagesPaths = getAllImagesInDirectory(africanos_path);
 
 	float sigma = 0.5;
-	int k = 300;
-	int min_size = 2000;
+	int k = 200;
+	int min_size = 1000;
 	
 	for (int i = 0; i < imagesPaths.size(); i++) {
-		string imagePath = imagesPaths.at(i);
-
+		 string imagePath = imagesPaths.at(i);
+		//string imagePath = "./dataset_satelite/africanos/02.png";
 		Mat src = imread(imagePath);
-		 
 		if (!src.data) return -1; 
 		
 		//applyHoughTranform(src, imagePath, "output_lines_3_enhanced/");
@@ -157,14 +170,16 @@ int main() {
 
 		vector<int> area_hypothesis = computeAllHypothesisCovagere(hypothesis);
 
-		// Refinamento das hipoteses geradas
-		vector<int> hypothesis_refined = localHypothesisRefinement(area_hypothesis, hypothesis[4]);
-
+		// Refinamento das hipoteses geradas 137, 138
+		vector<int> hypothesis_refined_indexes = localHypothesisRefinement(area_hypothesis, hypothesis[4], 0.4, 0.7);
+		for (int j = 0; j < hypothesis_refined_indexes.size(); j++) {
+			int index = hypothesis_refined_indexes[j];
+			cout << "Index (" << index << ") -->" << area_hypothesis[index] << endl;
+			drawingHypothesis(src.clone(), hypothesis[0][index], hypothesis[1][index], hypothesis[2][index], hypothesis[3][index]);
+		}
+		
 		break;
 
 	}
-
-	system("pause");
-
 	return 0;
 }
