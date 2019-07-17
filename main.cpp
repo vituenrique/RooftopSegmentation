@@ -86,9 +86,7 @@ vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> a
 
 	for (int i = 0; i < area_segments.size(); i++) {
 		double ratio = (double)area_segments[i] / area_hypothesis[i];
-		//cout << area_hypothesis[i] << " / " << area_segments[i] << "= " << ratio << endl;
 		ratios.push_back(ratio);
-
 	}
 
 	vector<double> ratios_normalized = normalizeData(ratios);
@@ -96,19 +94,15 @@ vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> a
 	vector<double> area_segments_normalized = normalizeData(area_segments);
 	vector<double> scores;
 	for (int j = 0; j < ratios_normalized.size(); j++) {
-		double score = (area_hypothesis_normalized[j] + ratios_normalized[j] + area_segments_normalized[j]) / 2;
+		double score = (area_hypothesis_normalized[j] + ratios_normalized[j] + area_segments_normalized[j]) / 3;
 		scores.push_back(score);
-		//cout << "Index (" << j << ") -->" << "(" << area_hypothesis_normalized[j] << " + " << ratios_normalized[j] << " + " << area_segments_normalized[j] << ")/ 2 = " << score << endl;
 	}
 
 	vector<int> refined_indexes;
 	for (int i = 0; i < scores.size(); i++) {
-		//&& (area_hypothesis_normalized[i] > threshold && area_segments_normalized[i] > threshold) && ratios_normalized[i] > threshold   && scores[i] < threshold2
 
 		if (scores[i] > threshold1 && ratios_normalized[i] > threshold2 && area_hypothesis_normalized[i] > 0.03 && area_hypothesis_normalized[i] < 0.1) {
-			//cout << "Index (" << i << ") -->" << "(" << scores[i] << " , " << ratios_normalized[i] << ")" << (ratios_normalized[i] > threshold2) << endl;
 			refined_indexes.push_back(i);
-			cout << i << endl;
 		}
 	}
 
@@ -127,21 +121,6 @@ bool checkOverlappaing(int top1, int bottom1, int left1, int right1, int top2, i
 
 // Computes Global Refinement of all hypothesis
 vector<int> globalHypothesisRefinement(vector<vector<int>> hypothesis, vector<int> local_refined_hypothesis_indexes, vector<int> area_hypothesis, vector<int> area_segments) {
-	vector<double> ratios;
-
-	for (int i = 0; i < area_segments.size(); i++) {
-		double ratio = (double)area_segments[i] / area_hypothesis[i];
-		ratios.push_back(ratio);
-	}
-
-	vector<double> ratios_normalized = normalizeData(ratios);
-	vector<double> area_hypothesis_normalized = normalizeData(area_hypothesis);
-	vector<double> area_segments_normalized = normalizeData(area_segments);
-	vector<double> scores;
-	for (int j = 0; j < ratios_normalized.size(); j++) {
-		double score = (area_hypothesis_normalized[j] + ratios_normalized[j] + area_segments_normalized[j]) / 2;
-		scores.push_back(score);
-	}
 
 	vector<int> indexes_to_be_removed;
 
@@ -159,13 +138,7 @@ vector<int> globalHypothesisRefinement(vector<vector<int>> hypothesis, vector<in
 			}
 		}
 	}
-	cout << endl;
-	cout << endl;
-	cout << "Indexes to be removed: " << endl;
 
-	for (int i = 0; i < indexes_to_be_removed.size(); i++) {
-		cout << indexes_to_be_removed[i] << endl;
-	}
 	vector<int> global_refined_hypothesis_indexes;
 	for (int i = 0; i < local_refined_hypothesis_indexes.size(); i++) {
 		int index = local_refined_hypothesis_indexes[i];
@@ -191,14 +164,22 @@ void drawingHypothesis(Mat img, int top, int bottom, int left, int right, int li
 }
 
 // Draws and displays a bounding box 
-void saveHypothesis(Mat img, string path, int top, int bottom, int left, int right) {
-	Point pt1(left, bottom);
-	Point pt2(right, top);
+void saveHypothesis(Mat img, string path, vector<int> indexes, vector<int> tops, vector<int> bottoms, vector<int> lefts, vector<int> rights) {
 	Mat img_bw = Mat(img.rows, img.cols, CV_64F, cvScalar(0.));
-	rectangle(img_bw, pt1, pt2, Scalar(255, 255, 255), FILLED);
+	for (int i = 0; i < indexes.size(); i++) {
+		int index = indexes[i];
+		int top = tops[index];
+		int bottom = bottoms[index];
+		int left = lefts[index];
+		int right = rights[index];
+		
+		Point pt1(left, bottom);
+		Point pt2(right, top);
+		
+		rectangle(img_bw, pt1, pt2, Scalar(255, 255, 255), FILLED);
+	}
+		
 	imwrite(path, img_bw);
-
-	waitKey(0);
 }
 
 
@@ -208,50 +189,46 @@ int main() {
 	string nhozinho_path = "dataset_satelite/nhozinho/";
 	vector<string> imagesPaths = getAllImagesInDirectory(africanos_path);
 
-	float sigma = 0.5;
-	int k = 200;
+	float sigma = 0.3;
+	int k = 100;
 	int min_size = 1000;
 
 	for (int i = 0; i < imagesPaths.size(); i++) {
+
 		string imagePath = imagesPaths.at(i);
-		//string imagePath = "./dataset_satelite/africanos/02.png";
 		Mat src = imread(imagePath);
 		if (!src.data) return -1;
 
 		GraphSegmentation segmenter;
 		vector<vector<int>> hypothesis = segmenter.executeGraphSegmentation(imagePath, sigma, k, min_size);
-
 		vector<int> area_hypothesis = computeAllHypothesisCovagere(hypothesis);
 
+		//cout << "Computing Local Hypothesis Refinement..." << endl;
+
 		// Refinamento local das hipoteses geradas
-		vector<int> hypothesis_locally_refined_indexes = localHypothesisRefinement(area_hypothesis, hypothesis[4], 0.4, 0.7);
-		//for (int j = 0; j < hypothesis_locally_refined_indexes.size(); j++) {
-		//	int index = hypothesis_locally_refined_indexes[j];
-		//	cout << "Index (" << index << ") -->" << area_hypothesis[index] << endl;
-		//	drawingHypothesis(src.clone(), hypothesis[0][index], hypothesis[1][index], hypothesis[2][index], hypothesis[3][index]);
-		//}
-		
-		//cout << endl;
-		//cout << endl;
+		vector<int> hypothesis_locally_refined_indexes = localHypothesisRefinement(area_hypothesis, hypothesis[4], 0.2, 0.6);
+		/*for (int j = 0; j < hypothesis_locally_refined_indexes.size(); j++) {
+			int index = hypothesis_locally_refined_indexes[j];
+			cout << "Index (" << index << ") -->" << area_hypothesis[index] << endl;
+			drawingHypothesis(src.clone(), hypothesis[0][index], hypothesis[1][index], hypothesis[2][index], hypothesis[3][index]);
+		}*/
+		//cout << "Local Hypothesis Refinement has finished!" << endl;
 
-		//cout << hypothesis_locally_refined_indexes.size() << endl;
+		string imageName = imagePath.substr(imagePath.find_last_of("/\\") + 1);
 
-		std::string imageName = imagePath.substr(imagePath.find_last_of("/\\") + 1);
+		//cout << "Computing Global Hypothesis Refinement..." << endl;
 
 		// Refinamento global das hipoteses geradas
 		vector<int> hypothesis_globaly_refined_indexes = globalHypothesisRefinement(hypothesis, hypothesis_locally_refined_indexes, area_hypothesis, hypothesis[4]);
-		for (int j = 0; j < hypothesis_globaly_refined_indexes.size(); j++) {
+		saveHypothesis(src.clone(), "./Output/" + imageName, hypothesis_globaly_refined_indexes, hypothesis[0], hypothesis[1], hypothesis[2], hypothesis[3]);
+
+		/*for (int j = 0; j < hypothesis_globaly_refined_indexes.size(); j++) {
 			int index = hypothesis_globaly_refined_indexes[j];
-			//cout << "Index (" << index << ") -->" << area_hypothesis[index] << endl;
-			//drawingHypothesis(src.clone(), hypothesis[0][index], hypothesis[1][index], hypothesis[2][index], hypothesis[3][index], -1);
+			cout << "Index (" << index << ") -->" << area_hypothesis[index] << endl;
+			drawingHypothesis(src.clone(), hypothesis[0][index], hypothesis[1][index], hypothesis[2][index], hypothesis[3][index], -1);
+		}*/
 
-
-			saveHypothesis(src.clone(), "./Output/" + to_string(index) + "_" + imageName, hypothesis[0][index], hypothesis[1][index], hypothesis[2][index], hypothesis[3][index]);
-		}
-
-
-
-		break;
+		//cout << "Global Hypothesis Refinement has finished!" << endl;
 
 	}
 	return 0;

@@ -24,7 +24,7 @@ def main():
 	k = int(argv[4])
 	min_size = int(argv[5])
 
-	image_name = os.path.basename(input_img)[1]
+	image_name = os.path.basename(input_img).split(".")[0]
 	hypothesis = {}
 	hypothesis['top'] = []
 	hypothesis['bottom'] = []
@@ -33,7 +33,6 @@ def main():
 	hypothesis['area'] = []
 
 	for i in range(8):
-		#print(k)
 		segmentator = cv2.ximgproc.segmentation.createGraphSegmentation(sigma=sigma, k=k, min_size=min_size)
 		
 		src = cv2.imread(input_img)
@@ -42,7 +41,6 @@ def main():
 		smooth = cv2.addWeighted(blur, 1.5, src, -0.5, 0)
 
 		segment = segmentator.processImage(smooth)
-		seg_image = np.zeros(src.shape, np.uint8)
 		regions_image = np.zeros(src.shape, np.uint8)
 
 		for i in range(np.max(segment)):
@@ -64,8 +62,6 @@ def main():
 				regions_image[yi, xi] = color
 				each_segment[yi, xi] = 255
 			
-			# cv2.imshow("segments", each_segment)
-			# cv2.waitKey(0)
 			area_segment = computeArea(each_segment)
 			hypothesis['area'].append(int(area_segment))
 
@@ -75,11 +71,7 @@ def main():
 		if not os.path.isdir(output_path + "hipoteses/"):
 			os.mkdir(output_path + "hipoteses/")
 
-		# cv2.imwrite(output_path + image_name + "_" + i + "_regions.png", regions_image) 
-		# cv2.imwrite(output_path + image_name + "_" + i + "_hypothesis.png", src)
-
 		k += 200
-		#print(hypothesis)
 
 	saveHypothesisAsCSV(hypothesis, image_name, output_path)
 

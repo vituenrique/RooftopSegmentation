@@ -103,7 +103,10 @@ std::vector<std::vector<int>>  GraphSegmentation::executeGraphSegmentation(std::
 	for (int i = 0; i < 4; i++) imageName.pop_back();
 
 	int number = std::atoi(imageName.c_str());
-	imageName = std::to_string(number);
+	if (number >= 10) 
+		imageName = std::to_string(number);
+	else
+		imageName = "0" + std::to_string(number);
 	if(getHypothesisComputed(imageName, output_path))
 		return hypothesis;
 }
