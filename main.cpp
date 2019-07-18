@@ -84,30 +84,33 @@ vector<int> computeAllHypothesisCovagere(vector<vector<int>> hypothesis) {
 vector<int> localHypothesisRefinement(vector<int> area_hypothesis, vector<int> area_segments, double threshold1 = 0.5, double threshold2 = 0.5) {
 	vector<double> ratios;
 
+	// Computing the ratio between the segment area and the hipothesis area
 	for (int i = 0; i < area_segments.size(); i++) {
 		double ratio = (double)area_segments[i] / area_hypothesis[i];
 		ratios.push_back(ratio);
 	}
 
+	// Normalize everything that needs to be normalized
 	vector<double> ratios_normalized = normalizeData(ratios);
 	vector<double> area_hypothesis_normalized = normalizeData(area_hypothesis);
 	vector<double> area_segments_normalized = normalizeData(area_segments);
+
+	// Computing the mean between ratio, segment area and hipothesis area
 	vector<double> scores;
 	for (int j = 0; j < ratios_normalized.size(); j++) {
 		double score = (area_hypothesis_normalized[j] + ratios_normalized[j] + area_segments_normalized[j]) / 3;
 		scores.push_back(score);
 	}
 
+	// Creating a vector of indexes of all hipothesis after refinement
 	vector<int> refined_indexes;
 	for (int i = 0; i < scores.size(); i++) {
-
 		if (scores[i] > threshold1 && ratios_normalized[i] > threshold2 && area_hypothesis_normalized[i] > 0.03 && area_hypothesis_normalized[i] < 0.1) {
 			refined_indexes.push_back(i);
 		}
 	}
 
 	return refined_indexes;
-
 }
 
 // Checks whether or not two given bounding boxes are intersecting each other
@@ -123,13 +126,15 @@ bool checkOverlappaing(int top1, int bottom1, int left1, int right1, int top2, i
 vector<int> globalHypothesisRefinement(vector<vector<int>> hypothesis, vector<int> local_refined_hypothesis_indexes, vector<int> area_hypothesis, vector<int> area_segments) {
 
 	vector<int> indexes_to_be_removed;
-
+	// Finding all hipothesis that need to be removed
 	for (int i = 0; i < local_refined_hypothesis_indexes.size(); i++) {
 		int index_i = local_refined_hypothesis_indexes[i];
 		for (int j = 1; j < local_refined_hypothesis_indexes.size(); j++) {
 			int index_j = local_refined_hypothesis_indexes[j];
 			if (index_i == index_j) continue;
+			// If there is an overlapping
 			if (checkOverlappaing(hypothesis[0][index_i], hypothesis[1][index_i], hypothesis[2][index_i], hypothesis[3][index_i], hypothesis[0][index_j], hypothesis[1][index_j], hypothesis[2][index_j], hypothesis[3][index_j])) {
+				// Save the largest hipothesis to be removed
 				if (area_hypothesis[index_i] > area_hypothesis[index_j]) {
 					indexes_to_be_removed.push_back(index_j);
 				}else {
@@ -139,6 +144,7 @@ vector<int> globalHypothesisRefinement(vector<vector<int>> hypothesis, vector<in
 		}
 	}
 
+	// Removing all hipothesis that are set to be removed
 	vector<int> global_refined_hypothesis_indexes;
 	for (int i = 0; i < local_refined_hypothesis_indexes.size(); i++) {
 		int index = local_refined_hypothesis_indexes[i];
@@ -164,6 +170,45 @@ void drawingHypothesis(Mat img, int top, int bottom, int left, int right, int li
 }
 
 // Draws and displays a bounding box 
+void drawingAllHypothesis(Mat img, vector<int> indexes, vector<int> tops, vector<int> bottoms, vector<int> lefts, vector<int> rights, int line = -1, bool showAll = false) {
+	Mat img1 = img.clone();
+	for (int i = 0; i < indexes.size(); i++) {
+		int index = indexes[i];
+		int top = tops[index];
+		int bottom = bottoms[index];
+		int left = lefts[index];
+		int right = rights[index];
+
+		Point pt1(left, bottom);
+		Point pt2(right, top);
+		rectangle(img, pt1, pt2, Scalar(0, 255, 0), line);
+		
+
+	}
+	namedWindow("Hipoteses", WINDOW_AUTOSIZE);
+	imshow("Hipoteses", img);
+	if (showAll) {
+		
+
+		for (int i = 0; i < tops.size(); i++) {
+			int top = tops[i];
+			int bottom = bottoms[i];
+			int left = lefts[i];
+			int right = rights[i];
+
+			Point pt1(left, bottom);
+			Point pt2(right, top);
+			rectangle(img1, pt1, pt2, Scalar(0, 255, 0), line);
+
+		}
+		namedWindow("Hipoteses2", WINDOW_AUTOSIZE);
+		imshow("Hipoteses2", img1);
+	}
+	
+	waitKey(0);
+}
+
+// Draws and displays a bounding box 
 void saveHypothesis(Mat img, string path, vector<int> indexes, vector<int> tops, vector<int> bottoms, vector<int> lefts, vector<int> rights) {
 	Mat img_bw = Mat(img.rows, img.cols, CV_64F, cvScalar(0.));
 	for (int i = 0; i < indexes.size(); i++) {
@@ -182,7 +227,6 @@ void saveHypothesis(Mat img, string path, vector<int> indexes, vector<int> tops,
 	imwrite(path, img_bw);
 }
 
-
 int main() {
 
 	string africanos_path = "dataset_satelite/africanos/";
@@ -194,6 +238,7 @@ int main() {
 	int min_size = 1000;
 
 	for (int i = 0; i < imagesPaths.size(); i++) {
+		cout << i + 1 << "/" << imagesPaths.size() << endl;
 
 		string imagePath = imagesPaths.at(i);
 		Mat src = imread(imagePath);
@@ -207,6 +252,7 @@ int main() {
 
 		// Refinamento local das hipoteses geradas
 		vector<int> hypothesis_locally_refined_indexes = localHypothesisRefinement(area_hypothesis, hypothesis[4], 0.2, 0.6);
+		
 		/*for (int j = 0; j < hypothesis_locally_refined_indexes.size(); j++) {
 			int index = hypothesis_locally_refined_indexes[j];
 			cout << "Index (" << index << ") -->" << area_hypothesis[index] << endl;
@@ -220,6 +266,7 @@ int main() {
 
 		// Refinamento global das hipoteses geradas
 		vector<int> hypothesis_globaly_refined_indexes = globalHypothesisRefinement(hypothesis, hypothesis_locally_refined_indexes, area_hypothesis, hypothesis[4]);
+		cout << "Hipoteses Detectadas(" << i + 1 << "): " << hypothesis_globaly_refined_indexes.size() << " / " << hypothesis[0].size() << endl;
 		saveHypothesis(src.clone(), "./Output/" + imageName, hypothesis_globaly_refined_indexes, hypothesis[0], hypothesis[1], hypothesis[2], hypothesis[3]);
 
 		/*for (int j = 0; j < hypothesis_globaly_refined_indexes.size(); j++) {
@@ -231,5 +278,6 @@ int main() {
 		//cout << "Global Hypothesis Refinement has finished!" << endl;
 
 	}
+	system("pause");
 	return 0;
 }

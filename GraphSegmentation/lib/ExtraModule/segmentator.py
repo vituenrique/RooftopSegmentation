@@ -41,7 +41,7 @@ def main():
 		smooth = cv2.addWeighted(blur, 1.5, src, -0.5, 0)
 
 		segment = segmentator.processImage(smooth)
-		regions_image = np.zeros(src.shape, np.uint8)
+		regions_image = np.zeros((src.shape[0], src.shape[1], 1), np.uint8)
 
 		for i in range(np.max(segment)):
 			y, x = np.where(segment == i)
@@ -54,14 +54,14 @@ def main():
 
 			cv2.rectangle(src, (left, bottom), (right, top), (0, 255, 0), 1)
 			
-			color = [random.randint(0, 255), random.randint(0, 255),random.randint(0, 255)]
+			color = [random.randint(50, 120)]
 			
 			each_segment = np.zeros((src.shape[0], src.shape[1], 1), np.uint8)
 
 			for xi, yi in zip(x, y):
 				regions_image[yi, xi] = color
 				each_segment[yi, xi] = 255
-			
+						
 			area_segment = computeArea(each_segment)
 			hypothesis['area'].append(int(area_segment))
 
